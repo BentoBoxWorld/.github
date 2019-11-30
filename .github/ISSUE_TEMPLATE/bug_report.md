@@ -18,43 +18,29 @@ assignees: ''
 <!-- /!\ Leaving this section blank will result in your ticket being closed without further explanation. -->
 <!-- Please type below this line. -->
 
-#### Screenshots and videos
-<!-- Videos and screenshots are helpful as they can provide better information about your problem. -->
+#### Expected behavior
+<!-- What do should happen? -->
 <!-- Please type below this line. -->
 
-#### Expected behavior
-<!-- Clear and concise description of what you actually expected to happen when you encountered this bug. -->
+#### Screenshots and videos (Optional)
+<!-- Videos and screenshots are helpful as they can provide better information about your problem. -->
 <!-- Please type below this line. -->
 
 ### Environment
 
-#### Server
+##### BentoBox Version (Mandatory)
 <!-- /!\ Leaving this section blank will result in your ticket being closed without further explanation. -->
-<!-- Please replace the underscores with your answer. Do not remove the '*' characters. -->
- - OS: **________**
- - Java version: **________**
+<!-- Paste the output of `/bentobox version` in the code block below (replace the underscores). Do not provide an image. -->
+```
+_______
+```
 
-#### Plugins
-<!-- /!\ Leaving this section blank will result in your ticket being closed without further explanation. -->
+#### Plugins (Optional)
 <!-- Please paste the `/plugins` output inside the code block below (remove the underscores). Do not provide an image. -->
 ```
 _______
 ```
-
-#### BentoBox setup
-
-##### BentoBox and Addons
-<!-- /!\ Leaving this section blank will result in your ticket being closed without further explanation. -->
-<!-- Please paste the output of `/bentobox version` in the code block below (replace the underscores). Do not provide an image. -->
-```
-_______
-```
-
-##### Configuration
-<!-- /!\ Leaving this section blank will result in your ticket being closed without further explanation. -->
-<!-- Please replace the underscores with your answer. Do not remove the '*' characters. -->
- - Database: **________** <!-- Available options: YAML, JSON, MYSQL, MARIADB, MONGODB -->
-
-### Additional context
+ 
+### Additional context (Optional)
 <!-- Any additional information you'd like to provide us. -->
 <!-- Please type below this line. -->
