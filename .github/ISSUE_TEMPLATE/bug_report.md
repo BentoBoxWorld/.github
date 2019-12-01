@@ -19,7 +19,7 @@ assignees: ''
 <!-- Please type below this line. -->
 
 #### Expected behavior
-<!-- What do should happen? -->
+<!-- What do you think should happen? -->
 <!-- Please type below this line. -->
 
 #### Screenshots and videos (Optional)
