@@ -1,0 +1,63 @@
+name: Bug
+description: Something isn't right. Looks like a bug.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before reporting a bug here, please make sure you are on the latest version of BentoBox or one that we're still supporting.
+
+  - type: textarea
+    attributes:
+      label: Expected behavior
+      description: What you expected to see.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Observed/Actual behavior
+      description: What you actually saw.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: Steps/models to reproduce
+      description: This may include a paste of the console error, a video, or detailed step by step instructions to help reconstruct the issue.
+    validations:
+      required: true
+  - type: textarea
+    attributes:
+      label: BentoBox version
+      description: |
+        Run `/bbox version` on your server and **paste** the full, unmodified output here.
+        "latest" is *not* a version; we require the output of `/bbox version` so we can adequately track down the issue.
+        Additionally, do NOT provide a screenshot, you MUST paste the entire output.
+        <details>
+        <summary>Example</summary>
+
+        ```
+        > version
+        [20:34:42 INFO]: This server is running Paper version git-Paper-540 (MC: 1.16.5) (Implementing API version 1.16.5-R0.1-SNAPSHOT)
+        [20:34:42 INFO]: Checking version, please wait...
+        [20:34:42 INFO]: Previous version: git-Paper-538 (MC: 1.16.5)
+        [20:34:42 INFO]: You are running the latest version
+        ```
+
+        </details>
+    validations:
+      required: true
+      - type: textarea
+    attributes:
+      label: Plugin list
+      description: All plugins running on the server. Run `/plugins` on your server and **paste** the output here.
+    validations:
+      required: false
+
+  - type: textarea
+    attributes:
+      label: Other
+      description: |
+        Please include other helpful information below.
+        The more information we receive, the quicker and more effective we can be at finding the solution to the issue.
+    validations:
+      required: false
+
