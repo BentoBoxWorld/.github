@@ -1,6 +1,6 @@
 name: Feature Request
 description: Suggest an idea for BentoBox
-label: "Type: Enhancement"
+labels: "Type: Enhancement"
 body:
   - type: markdown
     attributes:
