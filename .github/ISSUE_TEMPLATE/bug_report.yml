@@ -35,17 +35,28 @@ body:
         <summary>Example</summary>
 
         ```
-        > version
-        [20:34:42 INFO]: This server is running Paper version git-Paper-540 (MC: 1.16.5) (Implementing API version 1.16.5-R0.1-SNAPSHOT)
-        [20:34:42 INFO]: Checking version, please wait...
-        [20:34:42 INFO]: Previous version: git-Paper-538 (MC: 1.16.5)
-        [20:34:42 INFO]: You are running the latest version
+        > bbox version
+       [09:56:43 INFO]: Running PAPER 1.17.1.
+       [09:56:43 INFO]: BentoBox version: 1.17.2-SNAPSHOT-LOCAL
+       [09:56:43 INFO]: Database: JSON
+       [09:56:43 INFO]: Loaded Game Worlds:
+       [09:56:43 INFO]: bskyblock_world (BSkyBlock): Overworld, Nether, The End
+       [09:56:43 INFO]: Loaded Addons:
+       [09:56:43 INFO]: Advancements 0.0.1-SNAPSHOT-LOCAL (ENABLED)
+       [09:56:43 INFO]: Border 3.2.0 (DISABLED)
+       [09:56:43 INFO]: Boxed 1.2.0 (DISABLED)
+       [09:56:43 INFO]: BSkyBlock 1.15.0 (ENABLED)
+       [09:56:43 INFO]: Level 2.7.2-SNAPSHOT-LOCAL (ENABLED)
+       [09:56:43 INFO]: Limits 1.17.1-SNAPSHOT-LOCAL (ENABLED)
+       [09:56:43 INFO]: TwerkingForTrees 1.4.3-SNAPSHOT-LOCAL (ENABLED)
+       [09:56:43 INFO]: Warps 1.10.2 (ENABLED)
         ```
 
         </details>
     validations:
       required: true
-      - type: textarea
+      
+  - type: textarea
     attributes:
       label: Plugin list
       description: All plugins running on the server. Run `/plugins` on your server and **paste** the output here.
