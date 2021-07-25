@@ -36,20 +36,19 @@ body:
 
         ```
         > bbox version
-       [09:56:43 INFO]: Running PAPER 1.17.1.
-       [09:56:43 INFO]: BentoBox version: 1.17.2-SNAPSHOT-LOCAL
-       [09:56:43 INFO]: Database: JSON
-       [09:56:43 INFO]: Loaded Game Worlds:
-       [09:56:43 INFO]: bskyblock_world (BSkyBlock): Overworld, Nether, The End
-       [09:56:43 INFO]: Loaded Addons:
-       [09:56:43 INFO]: Advancements 0.0.1-SNAPSHOT-LOCAL (ENABLED)
-       [09:56:43 INFO]: Border 3.2.0 (DISABLED)
-       [09:56:43 INFO]: Boxed 1.2.0 (DISABLED)
-       [09:56:43 INFO]: BSkyBlock 1.15.0 (ENABLED)
-       [09:56:43 INFO]: Level 2.7.2-SNAPSHOT-LOCAL (ENABLED)
-       [09:56:43 INFO]: Limits 1.17.1-SNAPSHOT-LOCAL (ENABLED)
-       [09:56:43 INFO]: TwerkingForTrees 1.4.3-SNAPSHOT-LOCAL (ENABLED)
-       [09:56:43 INFO]: Warps 1.10.2 (ENABLED)
+        Running PAPER 1.17.1.
+        BentoBox version 1.17.2-SNAPSHOT-LOCAL
+        Database JSON
+        Loaded Game Worlds
+        bskyblock_world (BSkyBlock): Overworld, Nether, The End
+        Loaded Addons
+        Border 3.2.0 (DISABLED)
+        Boxed 1.2.0 (DISABLED)
+        BSkyBlock 1.15.0 (ENABLED)
+        Level 2.7.2-SNAPSHOT-LOCAL (ENABLED)
+        Limits 1.17.1-SNAPSHOT-LOCAL (ENABLED)
+        TwerkingForTrees 1.4.3-SNAPSHOT-LOCAL (ENABLED)
+        Warps 1.10.2 (ENABLED)
         ```
 
         </details>
