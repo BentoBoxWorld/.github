@@ -14,7 +14,7 @@
 BentoBox World is where we develop BentoBox. BentoBox is a plugin for Minecraft servers running the Bukkit API, like Spigot, and Paper
 with a unique addon system that enables it to be customized and configured how an admin likes. 
 BentoBox focuses on island-based games like SkyBlock, OneBlock, AcidIsland, Boxed, SkyGrid, etc., and a whole suite of addons for
-those games. You can download BentoBox and associated addons at [downloads.bentobox.world](https://downloads.bentobox.world).
+those games. You can download BentoBox and associated addons at [download.bentobox.world](https://download.bentobox.world).
 
 ### 🌈 Contribution guidelines - how can the community get involved?
 
@@ -31,7 +31,7 @@ If you contribute code it **must be in agreement** with:
 ### 👩‍💻 Useful resources
 
 - User and Admin Documentation can be found at [docs.bentobox.world](https://docs.bentobox.world)
-- Downloads of binaries are at the main download site: [downloads.bentobox.world](https://downloads.bentobox.world)
+- Downloads of binaries are at the main download site: [download.bentobox.world](https://download.bentobox.world)
 - Snapshots of development builds are on the Continuous Integration build server: [ci.bentobox.world](https://ci.bentobox.world)
 - JavaDocs can be found on the CI server under each project's build. The BentoBox API is [here](https://ci.codemc.io/job/BentoBoxWorld/job/BentoBox/ws/target/apidocs/index.html)
 
