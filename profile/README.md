@@ -16,6 +16,10 @@ with a unique addon system that enables it to be customized and configured how a
 BentoBox focuses on island-based games like SkyBlock, OneBlock, AcidIsland, Boxed, SkyGrid, etc., and a whole suite of addons for
 those games. You can download BentoBox and associated addons at [download.bentobox.world](https://download.bentobox.world).
 
+### Who would use BentoBox? How?
+
+BentoBox is for admins who want to run games like Skyblock, Oneblock or other island games on a Minecraft multiplayer server. BentoBox is a plugin for the server, i.e. some extra code that adds to the vanilla server code. If you want to find out about how to run your own Minecraft server for fun or profit, there are a lot of tutorials and videos on the Internet. Just google for it. Oracle provide a good blog on how to set up a free server on their cloud and there are many, many server hosting options out there. Bentobox enhances the  stock Minecraft game (also called vanilla) with new game modes that challenge new and experienced players alike. We hope you enjoy the "art" we have created and have fun with it!
+
 ### 🌈 Contribution guidelines - how can the community get involved?
 
 BentoBox is supported by volunteers who code and test it. The best way for you to get involved is to clone the repos you are interested in, 
