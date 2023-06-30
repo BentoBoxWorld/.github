@@ -8,29 +8,31 @@
 
 
 ## Hi there 👋
+Welcome to BentoBox, the exciting open-source project that brings the captivating world of island-style game plugins to Minecraft! Whether you're a seasoned server administrator or an aspiring Minecraft enthusiast, BentoBox offers a treasure trove of features and possibilities that will elevate your gameplay experience to new heights. In this ReadMe.md file, we'll walk you through what BentoBox is, who should use it, and how you can contribute to this vibrant community.
 
-### 🙋‍♀️ What is BentoBox World about?
-
-BentoBox World is where we develop BentoBox. BentoBox is a plugin for Minecraft servers running the Bukkit API, like Spigot, and Paper
-with a unique addon system that enables it to be customized and configured how an admin likes. 
-BentoBox focuses on island-based games like SkyBlock, OneBlock, AcidIsland, Boxed, SkyGrid, etc., and a whole suite of addons for
-those games. You can download BentoBox and associated addons at [download.bentobox.world](https://download.bentobox.world).
+At its core, BentoBox is a powerful toolkit designed to create island-style game modes for Minecraft servers. Built on the robust Bukkit API and compatible with Spigot and PaperMC, BentoBox provides an open API that allows you to unleash your creativity and develop immersive game modes. From beloved classics like BSkyBlock and AcidIsland to innovative creations like AOneBlock and Boxed, BentoBox empowers you to build and customize captivating experiences for your players.
 
 ### Who would use BentoBox? How?
 
-BentoBox is for admins who want to run games like Skyblock, Oneblock or other island games on a Minecraft multiplayer server. BentoBox is a plugin for the server, i.e. some extra code that adds to the vanilla server code. If you want to find out about how to run your own Minecraft server for fun or profit, there are a lot of tutorials and videos on the Internet. Just google for it. Oracle provide a good blog on how to set up a free server on their cloud and there are many, many server hosting options out there. Bentobox enhances the  stock Minecraft game (also called vanilla) with new game modes that challenge new and experienced players alike. We hope you enjoy the "art" we have created and have fun with it!
+Admins, if you're looking to enhance your Minecraft server with thrilling island-style game modes, BentoBox is the perfect solution for you. With its fully featured game play, [documentation](https://docs.bentobox.world), and [videos](https://www.youtube.com/@bentoboxworld7447/featured) setting up and managing these game modes becomes a breeze. You'll have access to a wide range of addons that seamlessly integrate with BentoBox, allowing you to offer exciting and unique gameplay experiences to your players. Visit our download site at https://download.bentobox.world to get started and discover the full potential of BentoBox for your server.
 
-### 🌈 Contribution guidelines - how can the community get involved?
+Developers, BentoBox provides you with a powerful and flexible API to create your own custom island-style game modes. Whether you're an experienced plugin developer or just starting out, BentoBox's open API and comprehensive documentation make it easy for you to dive in and start building your dream game modes. By harnessing the limitless possibilities of BentoBox's API, you can craft innovative gameplay mechanics, introduce new challenges, and bring your imaginative ideas to life. Join our thriving community of developers and contribute your creativity to the ever-growing world of BentoBox.
 
-BentoBox is supported by volunteers who code and test it. The best way for you to get involved is to clone the repos you are interested in, 
-submit a PR, which might be Java code, or language translations, or config edits and that will start the ball rolling. We are always happy for
-submissions. We also appreciate testers, who report bugs and recommend improvements. If you can't code, but want to support the work we do,
-you can help by [sponsoring](https://github.com/sponsors/tastybento), which helps pay for servers, domain names, and other costs.
+Thank you for joining us on this thrilling adventure with BentoBox. We can't wait to see the incredible game modes you create and the magical worlds you build. Together, we'll unlock new possibilities and make Minecraft an even more captivating universe. Happy gaming!
 
-If you contribute code it **must be in agreement** with:
+### Contributions
+
+Contributions are the lifeblood of any thriving open-source project, and BentoBox is no exception. We warmly welcome contributions from developers, designers, and Minecraft enthusiasts who want to make their mark on this ever-growing ecosystem. Whether you want to fix a bug, add a new feature, or enhance the existing functionality, your contributions will help shape the future of BentoBox.
+
+To get started, explore the repositories in this organization. You'll find a wealth of resources, including the source code, issue trackers, and documentation. If you have a specific feature or bug fix in mind, we recommend checking the existing issues to see if it's already being discussed. If not, feel free to open a new issue and start a conversation with the community.
+
+If you do contribute code it **must be in agreement** with:
 * our [license](https://github.com/BentoBoxWorld/BentoBox/blob/develop/LICENSE)
-* our [code of conduct](https://github.com/BentoBoxWorld/.github/blob/master/CODE_OF_CONDUCT.md)
-* our contribution guidelines
+* and our [code of conduct](https://github.com/BentoBoxWorld/.github/blob/master/CODE_OF_CONDUCT.md)
+
+### Support and Sponsorship
+
+We would like to extend our heartfelt thanks to the generous sponsors who support BentoBox. Your sponsorships play a crucial role in covering the project's costs, including server hosting, infrastructure, and development resources. If you or your organization are passionate about the Minecraft community and would like to contribute to BentoBox's success, we invite you to consider becoming a sponsor. Your support not only ensures the project's sustainability but also demonstrates your commitment to fostering innovation within the BentoBox ecosystem. To learn more about sponsorship opportunities, [click here](https://github.com/sponsors/tastybento). We deeply appreciate your support in making BentoBox even better for the Minecraft community.
 
 ### 👩‍💻 Useful resources
 
