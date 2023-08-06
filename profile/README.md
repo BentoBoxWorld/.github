@@ -49,6 +49,7 @@ These are some popular Gamemodes:
 * [**BSkyBlock**](https://github.com/BentoBoxWorld/BSkyBlock): The successor to the popular ASkyBlock.
 * [**CaveBlock**](https://github.com/BentoBoxWorld/CaveBlock): Try to live underground!
 * [**SkyGrid**](https://github.com/BentoBoxWorld/SkyGrid): Survive in world made up of scattered blocks - what an adventure!
+* [**Parkour**](https://github.com/BentoBoxWorld/Parkour): Give your players a world to make Parkour courses and run them against the clock!
 
 All official Addons are listed here:
 * [**Addons**](https://github.com/BentoBoxWorld/BentoBox/blob/develop/ADDON.md)
