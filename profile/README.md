@@ -10,7 +10,11 @@
 ## Hi there 👋
 Welcome to BentoBox, the exciting open-source project that brings the captivating world of island-style game plugins to Minecraft! Whether you're a seasoned server administrator or an aspiring Minecraft enthusiast, BentoBox offers a treasure trove of features and possibilities that will elevate your gameplay experience to new heights. In this ReadMe.md file, we'll walk you through what BentoBox is, who should use it, and how you can contribute to this vibrant community.
 
-At its core, BentoBox is a powerful toolkit designed to create island-style game modes for Minecraft servers. Built on the robust Bukkit API and compatible with Spigot and PaperMC, BentoBox provides an open API that allows you to unleash your creativity and develop immersive game modes. From beloved classics like BSkyBlock and AcidIsland to innovative creations like AOneBlock and Boxed, BentoBox empowers you to build and customize captivating experiences for your players.
+At its core, BentoBox is a powerful toolkit designed to create island-style game modes for Minecraft servers. Built on the robust Bukkit API and compatible with Spigot and PaperMC, BentoBox provides an open API that allows you to unleash your creativity and develop immersive game modes. From beloved classics like BSkyBlock and AcidIsland to innovative creations like AOneBlock and Boxed, BentoBox empowers you to build and customize captivating experiences for your players. 
+
+BentoBox is named after Japanese lunch boxes that have a number of compartments holding different foods. The foods come together to form a meal. BentoBox has the same idea where different addons can be used to make a whole.
+
+<img src="https://github.com/BentoBoxWorld/.github/assets/4407265/2e953053-e76f-46a5-b869-de6813c28f67" width="600">
 
 ### Who would use BentoBox? How?
 
