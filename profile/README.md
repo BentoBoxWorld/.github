@@ -51,6 +51,7 @@ These are some popular Gamemodes:
 * [**Boxed**](https://github.com/BentoBoxWorld/Boxed): A game mode where you are boxed into a tiny space that only expands by completing advancements.
 * [**BSkyBlock**](https://github.com/BentoBoxWorld/BSkyBlock): The successor to the popular ASkyBlock.
 * [**CaveBlock**](https://github.com/BentoBoxWorld/CaveBlock): Try to live underground!
+* [**Poseidon**](https://github.com/BentoBoxWorld/poseidon): Survive underwater!
 * [**SkyGrid**](https://github.com/BentoBoxWorld/SkyGrid): Survive in world made up of scattered blocks - what an adventure!
 * [**Parkour**](https://github.com/BentoBoxWorld/Parkour): Give your players a world to make Parkour courses and run them against the clock!
 
