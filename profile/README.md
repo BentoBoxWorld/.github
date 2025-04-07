@@ -9,7 +9,7 @@
 ## Hi there 👋
 Welcome to BentoBox, the exciting open-source project that brings the captivating world of island-style game plugins to Minecraft! Whether you're a seasoned server administrator or an aspiring Minecraft enthusiast, BentoBox offers a treasure trove of features and possibilities that will elevate your gameplay experience to new heights. In this ReadMe.md file, we'll walk you through what BentoBox is, who should use it, and how you can contribute to this vibrant community.
 
-At its core, BentoBox is a powerful toolkit designed to create island-style game modes for Minecraft servers. Built on the robust Bukkit API and compatible with Spigot and PaperMC, BentoBox provides an open API that allows you to unleash your creativity and develop immersive game modes. From beloved classics like BSkyBlock and AcidIsland to innovative creations like AOneBlock and Boxed, BentoBox empowers you to build and customize captivating experiences for your players. 
+At its core, BentoBox is a powerful toolkit designed to create island-style game modes for Minecraft servers. Built on the robust Bukkit API and compatible with PaperMC, BentoBox provides an open API that allows you to unleash your creativity and develop immersive game modes. From beloved classics like BSkyBlock and AcidIsland to innovative creations like AOneBlock and Boxed, BentoBox empowers you to build and customize captivating experiences for your players. 
 
 BentoBox is named after Japanese lunch boxes that have a number of compartments holding different foods. The foods come together to form a meal. BentoBox has the same idea where different addons can be used to make a whole.
 
@@ -108,8 +108,8 @@ dependencies {
 [tastybento](https://github.com/tastybento) created ASkyBlock and AcidIsland that shared the same codebase. These plugins became very popular but became hard to maintain.
 [Poslovitch](https://github.com/Poslovitch) was running a Skyblock server before starting to contribute regularly to ASkyBlock's codebase. He proposed the idea of completely rewriting ASkyBlock
 to make it easier to maintain and richer in features. In May 2017, this became the *BSkyBlock* project. As development progressed it became clear that a lot of the new core features could be used by other
-island-style games and so that core functionality was split off and renamed *BentoBox* and the addon system was created. The addons for BSkyBlock and AcidIsland became very simple to develop and much smaller. 
-The community started to grow and we added new game modes like SkyGrid and CaveBlock by BONNe. BONNe also took over maintenance of Challenges and Biomes and contributed to other addons.  
+island-style games and so that core functionality was split off and renamed *BentoBox* and the addon system was created. The addons for BSkyBlock and AcidIsland became very simple to develop and much smaller. In December 2019, Poslovitch launched the BentoBox collection on SpigotMC and the story continues! 
+The community continues to grow and we added new game modes like SkyGrid and CaveBlock by BONNe. BONNe also took over maintenance of Challenges and Biomes and contributes to other addons.  
+tastybento added more game modes, including AOneBlock, Boxed, Parkor, and Poseidon. BentoBox also moved from Spigot to focus on Paper API compatibility in 2025.
 
-In December 2019, Poslovitch launched the BentoBox collection on SpigotMC and the story continues! 
 
