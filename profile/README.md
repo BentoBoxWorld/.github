@@ -94,7 +94,16 @@ BentoBox uses Maven, and its Maven repository is kindly provided by [CodeMC](htt
 ### Gradle
 ```groovy
 repositories {
-  maven { url "https://repo.codemc.org/repository/maven-public/" }
+    mavenCentral()
+    maven {
+        name = "codemc-public"
+        url = uri("https://repo.codemc.io/repository/maven-public/")
+    }
+
+    maven {
+        name = "bentoboxworld"
+        url = uri("https://repo.codemc.org/repository/bentoboxworld/")
+    }
 }
 
 dependencies {
