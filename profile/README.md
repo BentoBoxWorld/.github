@@ -53,6 +53,7 @@ These are some popular Gamemodes:
 * [**CaveBlock**](https://github.com/BentoBoxWorld/CaveBlock): Try to live underground!
 * [**Poseidon**](https://github.com/BentoBoxWorld/poseidon): Survive underwater!
 * [**SkyGrid**](https://github.com/BentoBoxWorld/SkyGrid): Survive in world made up of scattered blocks - what an adventure!
+* [**stranger Realms**](https://github.com/BentoBoxWorld/StrangerRealms): The familiar world is shadowed by a terrifying, inverted dimension — the Upside Down.
 * [**Parkour**](https://github.com/BentoBoxWorld/Parkour): Give your players a world to make Parkour courses and run them against the clock!
 
 All official Addons are listed here:
