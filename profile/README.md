@@ -4,6 +4,7 @@
 [![Reliability Rating](https://sonarcloud.io/api/project_badges/measure?project=BentoBoxWorld_BentoBox&metric=reliability_rating)](https://sonarcloud.io/dashboard?id=BentoBoxWorld_BentoBox)
 [![Security Rating](https://sonarcloud.io/api/project_badges/measure?project=BentoBoxWorld_BentoBox&metric=security_rating)](https://sonarcloud.io/dashboard?id=BentoBoxWorld_BentoBox)
 [![Bugs](https://sonarcloud.io/api/project_badges/measure?project=BentoBoxWorld_BentoBox&metric=bugs)](https://sonarcloud.io/dashboard?id=BentoBoxWorld_BentoBox)
+[![BentoBox Integration Tests](https://github.com/BentoBoxWorld/bbox-test-harness/actions/workflows/integration-test.yml/badge.svg)](https://github.com/BentoBoxWorld/bbox-test-harness/actions/workflows/integration-test.yml)
 
 
 ## Hi there 👋
