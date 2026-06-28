@@ -45,6 +45,10 @@ on:
         description: "Hangar release channel."
         type: string
         default: "Release"
+      version:
+        description: "Override version (for manual workflow_dispatch runs). Blank = read from the release tag."
+        type: string
+        default: ""
     secrets:
       HANGAR_API_KEY:
         required: false
@@ -72,9 +76,11 @@ jobs:
         id: meta
         run: |
           set -euo pipefail
-          # Version from the release tag (strip an optional leading "v").
-          VERSION="${{ github.event.release.tag_name }}"
+          # Version: explicit input (manual runs) wins, else the release tag.
+          VERSION="${{ inputs.version }}"
+          if [ -z "$VERSION" ]; then VERSION="${{ github.event.release.tag_name }}"; fi
           VERSION="${VERSION#v}"
+          if [ -z "$VERSION" ]; then echo "::error::No version (no version input and no release tag)"; exit 1; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
           # Pick the release jar: newest *.jar in target/, excluding shade leftovers/sources/javadoc.
