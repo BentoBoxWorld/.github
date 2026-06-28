@@ -101,9 +101,20 @@ jobs:
             echo "__EOF__"
           } >> "$GITHUB_OUTPUT"
 
+      # Detect which credentials are present. `secrets` can't be used in `if:`,
+      # so we surface their presence as step outputs and gate on those instead.
+      - name: Detect credentials
+        id: creds
+        env:
+          HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+        run: |
+          if [ -n "${HANGAR_API_KEY:-}" ]; then echo "hangar=true" >> "$GITHUB_OUTPUT"; else echo "hangar=false" >> "$GITHUB_OUTPUT"; fi
+          if [ -n "${CURSEFORGE_TOKEN:-}" ]; then echo "curseforge=true" >> "$GITHUB_OUTPUT"; else echo "curseforge=false" >> "$GITHUB_OUTPUT"; fi
+
       # ---------------------------------------------------------------- Hangar
       - name: Publish to Hangar
-        if: ${{ inputs.hangar_slug != '' && secrets.HANGAR_API_KEY != '' }}
+        if: ${{ inputs.hangar_slug != '' && steps.creds.outputs.hangar == 'true' }}
         env:
           HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
           OWNER: ${{ inputs.hangar_owner }}
@@ -146,7 +157,7 @@ jobs:
 
       # ------------------------------------------------------------ CurseForge
       - name: Publish to CurseForge
-        if: ${{ inputs.curseforge_id != '' && secrets.CURSEFORGE_TOKEN != '' }}
+        if: ${{ inputs.curseforge_id != '' && steps.creds.outputs.curseforge == 'true' }}
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           CF_ID: ${{ inputs.curseforge_id }}
