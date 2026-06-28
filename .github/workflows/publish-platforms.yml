@@ -41,6 +41,14 @@ on:
         description: "maven or gradle."
         type: string
         default: "maven"
+      use_release_asset:
+        description: "true = download the jar already attached to the GitHub release instead of rebuilding from source. Avoids dependency-repo outages breaking publishing."
+        type: string
+        default: "false"
+      release_asset_pattern:
+        description: "Glob for the asset to download from the release (only when use_release_asset=true)."
+        type: string
+        default: "*.jar"
       jar_glob:
         description: "Glob for the release jar. Blank = auto (Maven target/*.jar, Gradle build/libs/*.jar)."
         type: string
@@ -66,7 +74,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      # Build from source (default). Skipped when reusing the release asset, so a
+      # dependency-repo outage can't block a release that already has a built jar.
       - name: Set up JDK
+        if: ${{ inputs.use_release_asset != 'true' }}
         uses: actions/setup-java@v4
         with:
           distribution: temurin
@@ -74,6 +85,7 @@ jobs:
           cache: ${{ inputs.build_tool == 'gradle' && 'gradle' || 'maven' }}
 
       - name: Build
+        if: ${{ inputs.use_release_asset != 'true' }}
         run: |
           set -euo pipefail
           if [ "${{ inputs.build_tool }}" = "gradle" ]; then
@@ -82,6 +94,24 @@ jobs:
           else
             mvn -B -DskipTests package
           fi
+
+      # Reuse the jar already attached to the GitHub release instead of rebuilding.
+      - name: Download release asset
+        if: ${{ inputs.use_release_asset == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          TAG="${{ inputs.version }}"
+          if [ -z "$TAG" ]; then TAG="${{ github.event.release.tag_name }}"; fi
+          if [ -z "$TAG" ]; then echo "::error::No tag (no version input and no release tag) to download the asset from"; exit 1; fi
+          mkdir -p release-assets
+          gh release download "$TAG" \
+            --repo "$GITHUB_REPOSITORY" \
+            --pattern "${{ inputs.release_asset_pattern }}" \
+            --dir release-assets
+          echo "Downloaded release asset(s) for $TAG:"
+          ls -l release-assets
 
       - name: Resolve version and jar
         id: meta
@@ -94,10 +124,13 @@ jobs:
           if [ -z "$VERSION" ]; then echo "::error::No version (no version input and no release tag)"; exit 1; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          # Pick the release jar. Use jar_glob if given, else default by build tool.
+          # Pick the release jar. Use jar_glob if given, else default by source:
+          # the downloaded release asset, or the build output dir for the build tool.
           GLOB="${{ inputs.jar_glob }}"
           if [ -z "$GLOB" ]; then
-            if [ "${{ inputs.build_tool }}" = "gradle" ]; then GLOB="build/libs/*.jar"; else GLOB="target/*.jar"; fi
+            if [ "${{ inputs.use_release_asset }}" = "true" ]; then GLOB="release-assets/*.jar";
+            elif [ "${{ inputs.build_tool }}" = "gradle" ]; then GLOB="build/libs/*.jar";
+            else GLOB="target/*.jar"; fi
           fi
           JAR=$(ls -1t $GLOB 2>/dev/null \
             | grep -Ev 'original-|-sources|-javadoc|-part' \
