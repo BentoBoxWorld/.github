@@ -235,21 +235,40 @@ jobs:
           if [ ${#IDS[@]} -eq 0 ]; then echo "::error::No CurseForge game versions resolved"; exit 1; fi
           GV=$(printf '%s\n' "${IDS[@]}" | jq -s '.')
 
-          # 2. Metadata + upload.
-          META=$(jq -n \
-            --arg cl "$CHANGELOG" \
-            --argjson gv "$GV" \
-            '{changelog:$cl, changelogType:"markdown", releaseType:"release", gameVersions:$gv}')
+          # 2. Upload. CurseForge rejects a whole upload (error 1009) when ANY single
+          #    gameVersion id isn't valid for plugin uploads yet - e.g. a brand-new MC
+          #    version that has a tag but isn't enabled for the project's game. Rather
+          #    than fail the release, drop the offending id and retry, so the jar still
+          #    publishes against every version CurseForge does accept.
           echo "CurseForge gameVersion ids: $(echo "$GV" | jq -c '.')"
-          # Capture status + body so an API rejection (e.g. 400) shows why, instead of a bare curl exit 22.
-          HTTP=$(curl -sS -o cf_resp.json -w '%{http_code}' -X POST \
-            "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
-            -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
-            -F "metadata=${META};type=application/json" \
-            -F "file=@${JAR}")
-          echo "CurseForge HTTP $HTTP; response: $(cat cf_resp.json 2>/dev/null)"
-          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
-            echo "::error::CurseForge upload failed (HTTP $HTTP): $(cat cf_resp.json 2>/dev/null)"
-            exit 1
-          fi
-          echo "CurseForge: uploaded to project ${CF_ID}"
+          for attempt in $(seq 1 25); do
+            META=$(jq -n \
+              --arg cl "$CHANGELOG" \
+              --argjson gv "$GV" \
+              '{changelog:$cl, changelogType:"markdown", releaseType:"release", gameVersions:$gv}')
+            HTTP=$(curl -sS -o cf_resp.json -w '%{http_code}' -X POST \
+              "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
+              -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
+              -F "metadata=${META};type=application/json" \
+              -F "file=@${JAR}")
+            BODY=$(cat cf_resp.json 2>/dev/null)
+            if [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 300 ]; then
+              echo "CurseForge: uploaded to project ${CF_ID}"
+              exit 0
+            fi
+            echo "CurseForge HTTP $HTTP; response: $BODY"
+            # Error 1009 names a single bad id ("Invalid game version ID: 16498 ..."). Drop it and retry.
+            BADID=$(echo "$BODY" | jq -r 'select(.errorCode==1009) | .errorMessage | capture("ID: (?<id>[0-9]+)") | .id' 2>/dev/null)
+            if [ -z "$BADID" ]; then
+              echo "::error::CurseForge upload failed (HTTP $HTTP): $BODY"
+              exit 1
+            fi
+            echo "::warning::CurseForge rejected game version id $BADID; dropping it and retrying"
+            GV=$(echo "$GV" | jq --argjson b "$BADID" 'map(select(. != $b))')
+            if [ "$(echo "$GV" | jq 'length')" -eq 0 ]; then
+              echo "::error::CurseForge rejected every game version id; nothing left to publish against"
+              exit 1
+            fi
+          done
+          echo "::error::CurseForge upload still failing after dropping rejected versions"
+          exit 1
