@@ -196,11 +196,16 @@ jobs:
               files:[{platforms:["PAPER"]}]}')
 
           # 3. Upload (versionUpload part + the jar as the files part).
-          curl -fsS -X POST \
+          HTTP=$(curl -sS -o hangar_resp.json -w '%{http_code}' -X POST \
             "https://hangar.papermc.io/api/v1/projects/${OWNER}/${SLUG}/upload" \
             -H "Authorization: ${JWT}" \
             -F "versionUpload=${UPLOAD};type=application/json" \
-            -F "files=@${JAR}"
+            -F "files=@${JAR}")
+          echo "Hangar HTTP $HTTP; response: $(cat hangar_resp.json 2>/dev/null)"
+          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
+            echo "::error::Hangar upload failed (HTTP $HTTP): $(cat hangar_resp.json 2>/dev/null)"
+            exit 1
+          fi
           echo "Hangar: published ${SLUG} ${VERSION}"
 
       # ------------------------------------------------------------ CurseForge
@@ -235,9 +240,16 @@ jobs:
             --arg cl "$CHANGELOG" \
             --argjson gv "$GV" \
             '{changelog:$cl, changelogType:"markdown", releaseType:"release", gameVersions:$gv}')
-          curl -fsS -X POST \
+          echo "CurseForge gameVersion ids: $(echo "$GV" | jq -c '.')"
+          # Capture status + body so an API rejection (e.g. 400) shows why, instead of a bare curl exit 22.
+          HTTP=$(curl -sS -o cf_resp.json -w '%{http_code}' -X POST \
             "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
             -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             -F "metadata=${META};type=application/json" \
-            -F "file=@${JAR}"
+            -F "file=@${JAR}")
+          echo "CurseForge HTTP $HTTP; response: $(cat cf_resp.json 2>/dev/null)"
+          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
+            echo "::error::CurseForge upload failed (HTTP $HTTP): $(cat cf_resp.json 2>/dev/null)"
+            exit 1
+          fi
           echo "CurseForge: uploaded to project ${CF_ID}"
