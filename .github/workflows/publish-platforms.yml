@@ -25,6 +25,10 @@ on:
         description: "CurseForge numeric project id. Blank = skip CurseForge."
         type: string
         default: ""
+      curseforge_version_type_id:
+        description: "CurseForge gameVersionTypeID to resolve MC version names under. 1 = the flat Minecraft type used by Bukkit/Paper plugin projects (the per-version mod types are rejected as 'invalid dependency')."
+        type: string
+        default: "1"
       game_versions:
         description: "Comma-separated Minecraft versions, e.g. 1.21.5,1.21.6,1.21.7"
         type: string
@@ -216,20 +220,26 @@ jobs:
           CF_ID: ${{ inputs.curseforge_id }}
           JAR: ${{ steps.meta.outputs.jar }}
           GAME_VERSIONS: ${{ inputs.game_versions }}
+          CF_VERSION_TYPE_ID: ${{ inputs.curseforge_version_type_id }}
           CHANGELOG: ${{ steps.meta.outputs.changelog }}
         run: |
           set -euo pipefail
 
           # 1. Map MC version names -> CurseForge numeric gameVersion ids.
+          #    Each MC version exists under several gameVersionTypeIDs (per-version mod
+          #    types, "addons", etc.); a plugin project only accepts ids under the flat
+          #    Minecraft type (id 1) - the others fail with "invalid dependency". So
+          #    resolve names within CF_VERSION_TYPE_ID, not just the first name match.
           curl -fsS -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
             "https://minecraft.curseforge.com/api/game/versions" > cf_versions.json
           IDS=()
           for v in ${GAME_VERSIONS//,/ }; do
-            id=$(jq -r --arg n "$v" '.[] | select(.name==$n) | .id' cf_versions.json | head -n1)
+            id=$(jq -r --arg n "$v" --argjson t "$CF_VERSION_TYPE_ID" \
+              '.[] | select(.name==$n and .gameVersionTypeID==$t) | .id' cf_versions.json | head -n1)
             if [ -n "$id" ] && [ "$id" != "null" ]; then
               IDS+=("$id")
             else
-              echo "::warning::CurseForge has no game version id for '$v' (skipped)"
+              echo "::warning::CurseForge has no game version id for '$v' under type ${CF_VERSION_TYPE_ID} (skipped)"
             fi
           done
           if [ ${#IDS[@]} -eq 0 ]; then echo "::error::No CurseForge game versions resolved"; exit 1; fi
