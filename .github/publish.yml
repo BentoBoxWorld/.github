@@ -1,0 +1,178 @@
+# Reusable workflow: publish a built addon jar to Hangar and/or CurseForge.
+#
+# LOCATION: commit this to the org-wide ".github" repo at:
+#   bentoboxworld/.github/.github/workflows/publish-platforms.yml
+#
+# Each addon repo calls it (see publish.yml). It builds with Maven, then
+# uploads the resulting jar to Hangar (raw API) and CurseForge (raw upload API).
+# A platform is skipped automatically when its id/slug input is left blank,
+# so the same workflow serves Hangar-only, CF-only, or both.
+
+name: Publish to platforms
+
+on:
+  workflow_call:
+    inputs:
+      hangar_slug:
+        description: "Hangar project slug (e.g. AOneBlock, SkyBlock-BSkyBlock). Blank = skip Hangar."
+        type: string
+        default: ""
+      hangar_owner:
+        description: "Hangar owner namespace."
+        type: string
+        default: "BentoBoxWorld"
+      curseforge_id:
+        description: "CurseForge numeric project id. Blank = skip CurseForge."
+        type: string
+        default: ""
+      game_versions:
+        description: "Comma-separated Minecraft versions, e.g. 1.21.5,1.21.6,1.21.7"
+        type: string
+        required: true
+      paper_versions:
+        description: "Hangar PAPER platform versions. Defaults to game_versions when blank."
+        type: string
+        default: ""
+      java_version:
+        description: "JDK version to build with."
+        type: string
+        default: "21"
+      jar_glob:
+        description: "Glob for the release jar inside target/."
+        type: string
+        default: "target/*.jar"
+      channel:
+        description: "Hangar release channel."
+        type: string
+        default: "Release"
+    secrets:
+      HANGAR_API_KEY:
+        required: false
+      CURSEFORGE_TOKEN:
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: ${{ inputs.java_version }}
+          cache: maven
+
+      - name: Build
+        run: mvn -B -DskipTests package
+
+      - name: Resolve version and jar
+        id: meta
+        run: |
+          set -euo pipefail
+          # Version from the release tag (strip an optional leading "v").
+          VERSION="${{ github.event.release.tag_name }}"
+          VERSION="${VERSION#v}"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
+          # Pick the release jar: newest *.jar in target/, excluding shade leftovers/sources/javadoc.
+          JAR=$(ls -1t ${{ inputs.jar_glob }} 2>/dev/null \
+            | grep -Ev 'original-|-sources|-javadoc' \
+            | head -n1)
+          if [ -z "$JAR" ]; then echo "::error::No jar matched ${{ inputs.jar_glob }}"; exit 1; fi
+          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
+          echo "Resolved version=$VERSION jar=$JAR"
+
+          # Changelog = release body (falls back to a generic line).
+          BODY=${{ toJSON(github.event.release.body) }}
+          if [ -z "$BODY" ] || [ "$BODY" = "null" ]; then BODY="Release $VERSION"; fi
+          # store via env file to preserve newlines
+          {
+            echo "changelog<<__EOF__"
+            echo "$BODY"
+            echo "__EOF__"
+          } >> "$GITHUB_OUTPUT"
+
+      # ---------------------------------------------------------------- Hangar
+      - name: Publish to Hangar
+        if: ${{ inputs.hangar_slug != '' && secrets.HANGAR_API_KEY != '' }}
+        env:
+          HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
+          OWNER: ${{ inputs.hangar_owner }}
+          SLUG: ${{ inputs.hangar_slug }}
+          VERSION: ${{ steps.meta.outputs.version }}
+          JAR: ${{ steps.meta.outputs.jar }}
+          CHANNEL: ${{ inputs.channel }}
+          GAME_VERSIONS: ${{ inputs.game_versions }}
+          PAPER_VERSIONS: ${{ inputs.paper_versions }}
+          CHANGELOG: ${{ steps.meta.outputs.changelog }}
+        run: |
+          set -euo pipefail
+          PV="${PAPER_VERSIONS:-$GAME_VERSIONS}"
+
+          # 1. Exchange the API key for a short-lived JWT.
+          JWT=$(curl -fsS -X POST \
+            "https://hangar.papermc.io/api/v1/authenticate?apiKey=${HANGAR_API_KEY}" \
+            | jq -r '.token')
+          if [ -z "$JWT" ] || [ "$JWT" = "null" ]; then echo "::error::Hangar auth failed"; exit 1; fi
+
+          # 2. Build the versionUpload JSON.
+          PAPER_JSON=$(echo "$PV" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";""))')
+          UPLOAD=$(jq -n \
+            --arg v "$VERSION" \
+            --arg ch "$CHANNEL" \
+            --arg desc "$CHANGELOG" \
+            --argjson paper "$PAPER_JSON" \
+            '{version:$v, channel:$ch, description:$desc,
+              pluginDependencies:{},
+              platformDependencies:{PAPER:$paper},
+              files:[{platforms:["PAPER"]}]}')
+
+          # 3. Upload (versionUpload part + the jar as the files part).
+          curl -fsS -X POST \
+            "https://hangar.papermc.io/api/v1/projects/${OWNER}/${SLUG}/upload" \
+            -H "Authorization: ${JWT}" \
+            -F "versionUpload=${UPLOAD};type=application/json" \
+            -F "files=@${JAR}"
+          echo "Hangar: published ${SLUG} ${VERSION}"
+
+      # ------------------------------------------------------------ CurseForge
+      - name: Publish to CurseForge
+        if: ${{ inputs.curseforge_id != '' && secrets.CURSEFORGE_TOKEN != '' }}
+        env:
+          CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
+          CF_ID: ${{ inputs.curseforge_id }}
+          JAR: ${{ steps.meta.outputs.jar }}
+          GAME_VERSIONS: ${{ inputs.game_versions }}
+          CHANGELOG: ${{ steps.meta.outputs.changelog }}
+        run: |
+          set -euo pipefail
+
+          # 1. Map MC version names -> CurseForge numeric gameVersion ids.
+          curl -fsS -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
+            "https://minecraft.curseforge.com/api/game/versions" > cf_versions.json
+          IDS=()
+          for v in ${GAME_VERSIONS//,/ }; do
+            id=$(jq -r --arg n "$v" '.[] | select(.name==$n) | .id' cf_versions.json | head -n1)
+            if [ -n "$id" ] && [ "$id" != "null" ]; then
+              IDS+=("$id")
+            else
+              echo "::warning::CurseForge has no game version id for '$v' (skipped)"
+            fi
+          done
+          if [ ${#IDS[@]} -eq 0 ]; then echo "::error::No CurseForge game versions resolved"; exit 1; fi
+          GV=$(printf '%s\n' "${IDS[@]}" | jq -s '.')
+
+          # 2. Metadata + upload.
+          META=$(jq -n \
+            --arg cl "$CHANGELOG" \
+            --argjson gv "$GV" \
+            '{changelog:$cl, changelogType:"markdown", releaseType:"release", gameVersions:$gv}')
+          curl -fsS -X POST \
+            "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
+            -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
+            -F "metadata=${META};type=application/json" \
+            -F "file=@${JAR}"
+          echo "CurseForge: uploaded to project ${CF_ID}"
