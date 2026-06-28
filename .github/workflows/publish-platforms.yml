@@ -37,10 +37,14 @@ on:
         description: "JDK version to build with."
         type: string
         default: "21"
-      jar_glob:
-        description: "Glob for the release jar inside target/."
+      build_tool:
+        description: "maven or gradle."
         type: string
-        default: "target/*.jar"
+        default: "maven"
+      jar_glob:
+        description: "Glob for the release jar. Blank = auto (Maven target/*.jar, Gradle build/libs/*.jar)."
+        type: string
+        default: ""
       channel:
         description: "Hangar release channel."
         type: string
@@ -67,10 +71,17 @@ jobs:
         with:
           distribution: temurin
           java-version: ${{ inputs.java_version }}
-          cache: maven
+          cache: ${{ inputs.build_tool == 'gradle' && 'gradle' || 'maven' }}
 
       - name: Build
-        run: mvn -B -DskipTests package
+        run: |
+          set -euo pipefail
+          if [ "${{ inputs.build_tool }}" = "gradle" ]; then
+            chmod +x ./gradlew || true
+            ./gradlew build -x test --no-daemon
+          else
+            mvn -B -DskipTests package
+          fi
 
       - name: Resolve version and jar
         id: meta
@@ -83,11 +94,15 @@ jobs:
           if [ -z "$VERSION" ]; then echo "::error::No version (no version input and no release tag)"; exit 1; fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
 
-          # Pick the release jar: newest *.jar in target/, excluding shade leftovers/sources/javadoc.
-          JAR=$(ls -1t ${{ inputs.jar_glob }} 2>/dev/null \
-            | grep -Ev 'original-|-sources|-javadoc' \
+          # Pick the release jar. Use jar_glob if given, else default by build tool.
+          GLOB="${{ inputs.jar_glob }}"
+          if [ -z "$GLOB" ]; then
+            if [ "${{ inputs.build_tool }}" = "gradle" ]; then GLOB="build/libs/*.jar"; else GLOB="target/*.jar"; fi
+          fi
+          JAR=$(ls -1t $GLOB 2>/dev/null \
+            | grep -Ev 'original-|-sources|-javadoc|-part' \
             | head -n1)
-          if [ -z "$JAR" ]; then echo "::error::No jar matched ${{ inputs.jar_glob }}"; exit 1; fi
+          if [ -z "$JAR" ]; then echo "::error::No jar matched $GLOB"; exit 1; fi
           echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "Resolved version=$VERSION jar=$JAR"
 
