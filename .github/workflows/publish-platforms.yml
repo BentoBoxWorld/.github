@@ -3,10 +3,12 @@
 # LOCATION: commit this to the org-wide ".github" repo at:
 #   bentoboxworld/.github/.github/workflows/publish-platforms.yml
 #
-# Each addon repo calls it (see publish.yml). It builds with Maven, then
-# uploads the resulting jar to Hangar (raw API) and CurseForge (raw upload API).
-# A platform is skipped automatically when its id/slug input is left blank,
-# so the same workflow serves Hangar-only, CF-only, or both.
+# Each addon repo calls it (see publish.yml). A `prep` job resolves the jar (built
+# from source, or downloaded from the GitHub release when use_release_asset=true)
+# and the changelog once, then publishes them as an artifact. Two INDEPENDENT jobs
+# - `curseforge` and `hangar` - download that artifact and publish in parallel, so
+# a failure on one platform never blocks the other. A platform is skipped when its
+# id/slug input is left blank, or when its secret is absent.
 
 name: Publish to platforms
 
@@ -72,8 +74,13 @@ on:
         required: false
 
 jobs:
-  publish:
+  # ---------------------------------------------------------------- prep (shared)
+  # Resolve the jar + changelog once and hand them to the platform jobs as an
+  # artifact, so the jar is built/downloaded a single time.
+  prep:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.meta.outputs.version }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -117,7 +124,7 @@ jobs:
           echo "Downloaded release asset(s) for $TAG:"
           ls -l release-assets
 
-      - name: Resolve version and jar
+      - name: Resolve version, jar and changelog
         id: meta
         run: |
           set -euo pipefail
@@ -140,90 +147,61 @@ jobs:
             | grep -Ev 'original-|-sources|-javadoc|-part' \
             | head -n1)
           if [ -z "$JAR" ]; then echo "::error::No jar matched $GLOB"; exit 1; fi
-          echo "jar=$JAR" >> "$GITHUB_OUTPUT"
           echo "Resolved version=$VERSION jar=$JAR"
 
-          # Changelog = release body (falls back to a generic line).
+          # Stage the jar + changelog for the platform jobs.
+          mkdir -p out
+          cp "$JAR" out/
           BODY=${{ toJSON(github.event.release.body) }}
           if [ -z "$BODY" ] || [ "$BODY" = "null" ]; then BODY="Release $VERSION"; fi
-          # store via env file to preserve newlines
-          {
-            echo "changelog<<__EOF__"
-            echo "$BODY"
-            echo "__EOF__"
-          } >> "$GITHUB_OUTPUT"
+          printf '%s' "$BODY" > out/changelog.md
 
-      # Detect which credentials are present. `secrets` can't be used in `if:`,
-      # so we surface their presence as step outputs and gate on those instead.
-      - name: Detect credentials
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-dist
+          path: out
+          retention-days: 1
+
+  # ------------------------------------------------------------ CurseForge (job)
+  curseforge:
+    needs: prep
+    if: ${{ inputs.curseforge_id != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      # secrets can't be used in `if:`, so surface the token's presence as an output.
+      - name: Detect CurseForge credential
         id: creds
         env:
-          HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
         run: |
-          if [ -n "${HANGAR_API_KEY:-}" ]; then echo "hangar=true" >> "$GITHUB_OUTPUT"; else echo "hangar=false" >> "$GITHUB_OUTPUT"; fi
-          if [ -n "${CURSEFORGE_TOKEN:-}" ]; then echo "curseforge=true" >> "$GITHUB_OUTPUT"; else echo "curseforge=false" >> "$GITHUB_OUTPUT"; fi
-
-      # ---------------------------------------------------------------- Hangar
-      - name: Publish to Hangar
-        if: ${{ inputs.hangar_slug != '' && steps.creds.outputs.hangar == 'true' }}
-        env:
-          HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
-          OWNER: ${{ inputs.hangar_owner }}
-          SLUG: ${{ inputs.hangar_slug }}
-          VERSION: ${{ steps.meta.outputs.version }}
-          JAR: ${{ steps.meta.outputs.jar }}
-          CHANNEL: ${{ inputs.channel }}
-          GAME_VERSIONS: ${{ inputs.game_versions }}
-          PAPER_VERSIONS: ${{ inputs.paper_versions }}
-          CHANGELOG: ${{ steps.meta.outputs.changelog }}
-        run: |
-          set -euo pipefail
-          PV="${PAPER_VERSIONS:-$GAME_VERSIONS}"
-
-          # 1. Exchange the API key for a short-lived JWT.
-          JWT=$(curl -fsS -X POST \
-            "https://hangar.papermc.io/api/v1/authenticate?apiKey=${HANGAR_API_KEY}" \
-            | jq -r '.token')
-          if [ -z "$JWT" ] || [ "$JWT" = "null" ]; then echo "::error::Hangar auth failed"; exit 1; fi
-
-          # 2. Build the versionUpload JSON.
-          PAPER_JSON=$(echo "$PV" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";""))')
-          UPLOAD=$(jq -n \
-            --arg v "$VERSION" \
-            --arg ch "$CHANNEL" \
-            --arg desc "$CHANGELOG" \
-            --argjson paper "$PAPER_JSON" \
-            '{version:$v, channel:$ch, description:$desc,
-              pluginDependencies:{},
-              platformDependencies:{PAPER:$paper},
-              files:[{platforms:["PAPER"]}]}')
-
-          # 3. Upload (versionUpload part + the jar as the files part).
-          HTTP=$(curl -sS -o hangar_resp.json -w '%{http_code}' -X POST \
-            "https://hangar.papermc.io/api/v1/projects/${OWNER}/${SLUG}/upload" \
-            -H "Authorization: ${JWT}" \
-            -F "versionUpload=${UPLOAD};type=application/json" \
-            -F "files=@${JAR}")
-          echo "Hangar HTTP $HTTP; response: $(cat hangar_resp.json 2>/dev/null)"
-          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
-            echo "::error::Hangar upload failed (HTTP $HTTP): $(cat hangar_resp.json 2>/dev/null)"
-            exit 1
+          if [ -n "${CURSEFORGE_TOKEN:-}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::CURSEFORGE_TOKEN not set; skipping CurseForge"
           fi
-          echo "Hangar: published ${SLUG} ${VERSION}"
 
-      # ------------------------------------------------------------ CurseForge
+      - name: Download release artifact
+        if: ${{ steps.creds.outputs.ok == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dist
+          path: out
+
       - name: Publish to CurseForge
-        if: ${{ inputs.curseforge_id != '' && steps.creds.outputs.curseforge == 'true' }}
+        if: ${{ steps.creds.outputs.ok == 'true' }}
         env:
           CURSEFORGE_TOKEN: ${{ secrets.CURSEFORGE_TOKEN }}
           CF_ID: ${{ inputs.curseforge_id }}
-          JAR: ${{ steps.meta.outputs.jar }}
           GAME_VERSIONS: ${{ inputs.game_versions }}
           CF_VERSION_TYPE_ID: ${{ inputs.curseforge_version_type_id }}
-          CHANGELOG: ${{ steps.meta.outputs.changelog }}
+          VERSION: ${{ needs.prep.outputs.version }}
         run: |
           set -euo pipefail
+          JAR=$(ls -1 out/*.jar 2>/dev/null | grep -Ev 'original-|-sources|-javadoc' | head -n1)
+          if [ -z "$JAR" ]; then echo "::error::No jar in the release artifact"; exit 1; fi
+          CHANGELOG=$(cat out/changelog.md 2>/dev/null || echo "Release ${VERSION}")
 
           # 1. Map MC version names -> CurseForge numeric gameVersion ids.
           #    Each MC version exists under several gameVersionTypeIDs (per-version mod
@@ -282,3 +260,76 @@ jobs:
           done
           echo "::error::CurseForge upload still failing after dropping rejected versions"
           exit 1
+
+  # ---------------------------------------------------------------- Hangar (job)
+  hangar:
+    needs: prep
+    if: ${{ inputs.hangar_slug != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Detect Hangar credential
+        id: creds
+        env:
+          HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
+        run: |
+          if [ -n "${HANGAR_API_KEY:-}" ]; then
+            echo "ok=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ok=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::HANGAR_API_KEY not set; skipping Hangar"
+          fi
+
+      - name: Download release artifact
+        if: ${{ steps.creds.outputs.ok == 'true' }}
+        uses: actions/download-artifact@v4
+        with:
+          name: release-dist
+          path: out
+
+      - name: Publish to Hangar
+        if: ${{ steps.creds.outputs.ok == 'true' }}
+        env:
+          HANGAR_API_KEY: ${{ secrets.HANGAR_API_KEY }}
+          OWNER: ${{ inputs.hangar_owner }}
+          SLUG: ${{ inputs.hangar_slug }}
+          VERSION: ${{ needs.prep.outputs.version }}
+          CHANNEL: ${{ inputs.channel }}
+          GAME_VERSIONS: ${{ inputs.game_versions }}
+          PAPER_VERSIONS: ${{ inputs.paper_versions }}
+        run: |
+          set -euo pipefail
+          JAR=$(ls -1 out/*.jar 2>/dev/null | grep -Ev 'original-|-sources|-javadoc' | head -n1)
+          if [ -z "$JAR" ]; then echo "::error::No jar in the release artifact"; exit 1; fi
+          CHANGELOG=$(cat out/changelog.md 2>/dev/null || echo "Release ${VERSION}")
+          PV="${PAPER_VERSIONS:-$GAME_VERSIONS}"
+
+          # 1. Exchange the API key for a short-lived JWT.
+          JWT=$(curl -fsS -X POST \
+            "https://hangar.papermc.io/api/v1/authenticate?apiKey=${HANGAR_API_KEY}" \
+            | jq -r '.token')
+          if [ -z "$JWT" ] || [ "$JWT" = "null" ]; then echo "::error::Hangar auth failed"; exit 1; fi
+
+          # 2. Build the versionUpload JSON.
+          PAPER_JSON=$(echo "$PV" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";""))')
+          UPLOAD=$(jq -n \
+            --arg v "$VERSION" \
+            --arg ch "$CHANNEL" \
+            --arg desc "$CHANGELOG" \
+            --argjson paper "$PAPER_JSON" \
+            '{version:$v, channel:$ch, description:$desc,
+              pluginDependencies:{},
+              platformDependencies:{PAPER:$paper},
+              files:[{platforms:["PAPER"]}]}')
+
+          # 3. Upload (versionUpload part + the jar as the files part).
+          HTTP=$(curl -sS -o hangar_resp.json -w '%{http_code}' -X POST \
+            "https://hangar.papermc.io/api/v1/projects/${OWNER}/${SLUG}/upload" \
+            -H "Authorization: ${JWT}" \
+            -F "versionUpload=${UPLOAD};type=application/json" \
+            -F "files=@${JAR}")
+          echo "Hangar HTTP $HTTP; response: $(cat hangar_resp.json 2>/dev/null)"
+          if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
+            echo "::error::Hangar upload failed (HTTP $HTTP): $(cat hangar_resp.json 2>/dev/null)"
+            exit 1
+          fi
+          echo "Hangar: published ${SLUG} ${VERSION}"
