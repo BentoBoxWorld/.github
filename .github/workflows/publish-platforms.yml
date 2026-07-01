@@ -126,6 +126,13 @@ jobs:
 
       - name: Resolve version, jar and changelog
         id: meta
+        env:
+          # Pass the release body through the environment, never inline it into
+          # the script. Inline `${{ toJSON(github.event.release.body) }}` still
+          # leaves backticks and $(...) live inside the double-quoted shell
+          # string, so a body containing e.g. `code` breaks the run (command
+          # not found) and is a shell-injection vector. Read via "$RELEASE_BODY".
+          RELEASE_BODY: ${{ github.event.release.body }}
         run: |
           set -euo pipefail
           # Version: explicit input (manual runs) wins, else the release tag.
@@ -152,7 +159,7 @@ jobs:
           # Stage the jar + changelog for the platform jobs.
           mkdir -p out
           cp "$JAR" out/
-          BODY=${{ toJSON(github.event.release.body) }}
+          BODY="${RELEASE_BODY:-}"
           if [ -z "$BODY" ] || [ "$BODY" = "null" ]; then BODY="Release $VERSION"; fi
           printf '%s' "$BODY" > out/changelog.md
 
