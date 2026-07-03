@@ -161,7 +161,9 @@ jobs:
           cp "$JAR" out/
           BODY="${RELEASE_BODY:-}"
           if [ -z "$BODY" ] || [ "$BODY" = "null" ]; then BODY="Release $VERSION"; fi
-          printf '%s' "$BODY" > out/changelog.md
+          # GitHub release bodies use CRLF; strip the CRs so downstream markdown
+          # renderers (CurseForge/Hangar) get clean LF-only text.
+          printf '%s' "${BODY//$'\r'/}" > out/changelog.md
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
@@ -204,11 +206,27 @@ jobs:
           GAME_VERSIONS: ${{ inputs.game_versions }}
           CF_VERSION_TYPE_ID: ${{ inputs.curseforge_version_type_id }}
           VERSION: ${{ needs.prep.outputs.version }}
+          GH_TOKEN: ${{ github.token }}
         run: |
           set -euo pipefail
           JAR=$(ls -1 out/*.jar 2>/dev/null | grep -Ev 'original-|-sources|-javadoc' | head -n1)
           if [ -z "$JAR" ]; then echo "::error::No jar in the release artifact"; exit 1; fi
           CHANGELOG=$(cat out/changelog.md 2>/dev/null || echo "Release ${VERSION}")
+
+          # CurseForge's `markdown` changelogType renders our notes with every
+          # markdown character backslash-escaped (headings, bullets, code spans and
+          # links all show their literal `\#`, `\*`, `` \` ``, `\[` source). Render
+          # the markdown to HTML via GitHub's markdown API and upload it as `html`,
+          # which CurseForge displays correctly. Fall back to raw markdown if the
+          # render call fails so a publish is never blocked by it.
+          CHANGELOG_TYPE="html"
+          CHANGELOG_OUT=$(jq -n --arg t "$CHANGELOG" '{text:$t,mode:"markdown"}' \
+            | gh api --method POST /markdown --input - 2>/dev/null || true)
+          if [ -z "$CHANGELOG_OUT" ]; then
+            echo "::warning::GitHub markdown->HTML render failed; falling back to raw markdown changelog"
+            CHANGELOG_OUT="$CHANGELOG"
+            CHANGELOG_TYPE="markdown"
+          fi
 
           # 1. Map MC version names -> CurseForge numeric gameVersion ids.
           #    Each MC version exists under several gameVersionTypeIDs (per-version mod
@@ -238,9 +256,10 @@ jobs:
           echo "CurseForge gameVersion ids: $(echo "$GV" | jq -c '.')"
           for attempt in $(seq 1 25); do
             META=$(jq -n \
-              --arg cl "$CHANGELOG" \
+              --arg cl "$CHANGELOG_OUT" \
+              --arg ct "$CHANGELOG_TYPE" \
               --argjson gv "$GV" \
-              '{changelog:$cl, changelogType:"markdown", releaseType:"release", gameVersions:$gv}')
+              '{changelog:$cl, changelogType:$ct, releaseType:"release", gameVersions:$gv}')
             HTTP=$(curl -sS -o cf_resp.json -w '%{http_code}' -X POST \
               "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
               -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
