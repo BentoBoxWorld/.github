@@ -255,15 +255,20 @@ jobs:
           #    publishes against every version CurseForge does accept.
           echo "CurseForge gameVersion ids: $(echo "$GV" | jq -c '.')"
           for attempt in $(seq 1 25); do
-            META=$(jq -n \
+            # Pass the metadata via a file (curl's `<file` form). An inline -F value
+            # treats `;` and `,` as attribute separators, so a changelog containing
+            # them (any HTML entity does) gets truncated and CurseForge sees
+            # invalid JSON in `metadata`.
+            jq -n \
               --arg cl "$CHANGELOG_OUT" \
               --arg ct "$CHANGELOG_TYPE" \
               --argjson gv "$GV" \
-              '{changelog:$cl, changelogType:$ct, releaseType:"release", gameVersions:$gv}')
+              '{changelog:$cl, changelogType:$ct, releaseType:"release", gameVersions:$gv}' \
+              > cf_meta.json
             HTTP=$(curl -sS -o cf_resp.json -w '%{http_code}' -X POST \
               "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
               -H "X-Api-Token: ${CURSEFORGE_TOKEN}" \
-              -F "metadata=${META};type=application/json" \
+              -F "metadata=<cf_meta.json;type=application/json" \
               -F "file=@${JAR}")
             BODY=$(cat cf_resp.json 2>/dev/null)
             if [ "$HTTP" -ge 200 ] && [ "$HTTP" -lt 300 ]; then
@@ -335,9 +340,11 @@ jobs:
             | jq -r '.token')
           if [ -z "$JWT" ] || [ "$JWT" = "null" ]; then echo "::error::Hangar auth failed"; exit 1; fi
 
-          # 2. Build the versionUpload JSON.
+          # 2. Build the versionUpload JSON. Written to a file because an inline
+          #    -F value treats `;` and `,` as attribute separators, so a changelog
+          #    containing them gets truncated and Hangar fails to read the request.
           PAPER_JSON=$(echo "$PV" | jq -R 'split(",") | map(gsub("^\\s+|\\s+$";""))')
-          UPLOAD=$(jq -n \
+          jq -n \
             --arg v "$VERSION" \
             --arg ch "$CHANNEL" \
             --arg desc "$CHANGELOG" \
@@ -345,13 +352,14 @@ jobs:
             '{version:$v, channel:$ch, description:$desc,
               pluginDependencies:{},
               platformDependencies:{PAPER:$paper},
-              files:[{platforms:["PAPER"]}]}')
+              files:[{platforms:["PAPER"]}]}' \
+            > hangar_upload.json
 
           # 3. Upload (versionUpload part + the jar as the files part).
           HTTP=$(curl -sS -o hangar_resp.json -w '%{http_code}' -X POST \
             "https://hangar.papermc.io/api/v1/projects/${OWNER}/${SLUG}/upload" \
             -H "Authorization: ${JWT}" \
-            -F "versionUpload=${UPLOAD};type=application/json" \
+            -F "versionUpload=<hangar_upload.json;type=application/json" \
             -F "files=@${JAR}")
           echo "Hangar HTTP $HTTP; response: $(cat hangar_resp.json 2>/dev/null)"
           if [ "$HTTP" -lt 200 ] || [ "$HTTP" -ge 300 ]; then
