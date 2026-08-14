@@ -87,3 +87,7 @@ Community support and discussion lives on [Discord](https://discord.bentobox.wor
 ### Sponsorship
 
 BentoBox is free, open-source, and has been for years. Keeping it that way — maintaining infrastructure, funding CI builds, and continuing active development — takes real time and money. If BentoBox runs on your server or underpins something you've built, consider [sponsoring the project](https://github.com/sponsors/tastybento). Sponsors are credited and genuinely appreciated. Every bit helps.
+
+### Privacy
+
+BentoBox collects anonymous, aggregate usage statistics via bStats and nothing else. What is collected, what never is, and how to opt out are covered in the [privacy policy](https://github.com/BentoBoxWorld/.github/blob/master/PRIVACY.md).
