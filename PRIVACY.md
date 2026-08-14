@@ -37,7 +37,10 @@ Like any web request, the submission reveals the sending server's IP address to 
 
 ### How to opt out
 
-Set `enabled: false` in `plugins/bStats/config.yml` and restart the server. This is the bStats global switch: it disables metrics for BentoBox **and every other plugin on the server that uses bStats**. BentoBox does not have a separate per-plugin toggle.
+There are two switches; either one stops BentoBox's submissions. Both require a server restart to take effect:
+
+- **BentoBox only** (BentoBox 3.22.3 and later): set `general.metrics: false` in `plugins/BentoBox/config.yml`. BentoBox will not register with bStats at all, and other plugins' metrics are unaffected.
+- **Whole server**: set `enabled: false` in `plugins/bStats/config.yml`. This is the bStats global switch: it disables metrics for BentoBox **and every other plugin on the server that uses bStats**.
 
 ## Other network connections
 
