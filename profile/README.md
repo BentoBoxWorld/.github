@@ -91,3 +91,7 @@ BentoBox is free, open-source, and has been for years. Keeping it that way — m
 ### Privacy
 
 BentoBox collects anonymous, aggregate usage statistics via bStats and nothing else. What is collected, what never is, and how to opt out are covered in the [privacy policy](https://github.com/BentoBoxWorld/.github/blob/master/PRIVACY.md).
+
+### Contributing & AI
+
+PRs are always welcome — see the [contributing guide](https://github.com/BentoBoxWorld/.github/blob/master/CONTRIBUTING.md). We are pro-AI: tools like Claude Code are part of the BentoBox team, and contributors are free to use AI too. How we use it and what we expect is in the [AI policy](https://github.com/BentoBoxWorld/.github/blob/master/AI_POLICY.md).
