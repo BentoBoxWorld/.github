@@ -1,6 +1,6 @@
 # BentoBox Privacy Policy
 
-_Last updated: 14 August 2026_
+_Last updated: 31 October 2026_
 
 BentoBox is open-source Minecraft server software published by the BentoBoxWorld organization. This policy explains what data BentoBox collects, what it never collects, and how server owners can opt out. It applies to BentoBox and to the official addons and game modes published under this organization.
 
@@ -22,6 +22,7 @@ BentoBox uses [bStats](https://bstats.org), the standard open-source metrics ser
 
 - The configured default language and database type (e.g. JSON, MySQL).
 - The number of islands on the server, and the number created since the last submission.
+- The total size on disk of the island worlds, as a bracket only (e.g. "10–50 GB"). No folder names or paths are sent.
 - Player activity as a bracket only (e.g. "11–30 unique players since the last submission") — never who those players are.
 - The names and versions of enabled BentoBox addons and game modes, the BentoBox API version they are built against, and the names of third-party plugins BentoBox hooks into (e.g. Vault).
 - Which BentoBox config settings have been changed away from their default values, reported as named on/off toggles — never free-text values.
