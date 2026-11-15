@@ -31,6 +31,10 @@ on:
         description: "CurseForge gameVersionTypeID to resolve MC version names under. 1 = the flat Minecraft type used by Bukkit/Paper plugin projects (the per-version mod types are rejected as 'invalid dependency')."
         type: string
         default: "1"
+      curseforge_relations:
+        description: "CurseForge related projects for the uploaded file, as comma-separated slug:type pairs (type = requiredDependency, optionalDependency, embeddedLibrary, tool or incompatible). Defaults to BentoBox as a required dependency; set blank for BentoBox itself."
+        type: string
+        default: "bentobox:requiredDependency"
       game_versions:
         description: "Comma-separated Minecraft versions, e.g. 1.21.5,1.21.6,1.21.7"
         type: string
@@ -205,6 +209,7 @@ jobs:
           CF_ID: ${{ inputs.curseforge_id }}
           GAME_VERSIONS: ${{ inputs.game_versions }}
           CF_VERSION_TYPE_ID: ${{ inputs.curseforge_version_type_id }}
+          CF_RELATIONS: ${{ inputs.curseforge_relations }}
           VERSION: ${{ needs.prep.outputs.version }}
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -248,6 +253,14 @@ jobs:
           if [ ${#IDS[@]} -eq 0 ]; then echo "::error::No CurseForge game versions resolved"; exit 1; fi
           GV=$(printf '%s\n' "${IDS[@]}" | jq -s '.')
 
+          # Related projects (shown as the file's dependencies on CurseForge), e.g.
+          # "bentobox:requiredDependency". A pair without a type defaults to requiredDependency.
+          REL=$(jq -n --arg r "${CF_RELATIONS:-}" '$r | split(",") | map(gsub("^\\s+|\\s+$";"")) | map(select(length>0))
+            | map(split(":") | {slug:.[0], type:(.[1] // "requiredDependency")})')
+          # BentoBox itself (CurseForge project 1512488) must not depend on itself.
+          if [ "$CF_ID" = "1512488" ]; then REL=$(echo "$REL" | jq 'map(select(.slug != "bentobox"))'); fi
+          echo "CurseForge relations: $(echo "$REL" | jq -c '.')"
+
           # 2. Upload. CurseForge rejects a whole upload (error 1009) when ANY single
           #    gameVersion id isn't valid for plugin uploads yet - e.g. a brand-new MC
           #    version that has a tag but isn't enabled for the project's game. Rather
@@ -263,7 +276,9 @@ jobs:
               --arg cl "$CHANGELOG_OUT" \
               --arg ct "$CHANGELOG_TYPE" \
               --argjson gv "$GV" \
-              '{changelog:$cl, changelogType:$ct, releaseType:"release", gameVersions:$gv}' \
+              --argjson rel "$REL" \
+              '{changelog:$cl, changelogType:$ct, releaseType:"release", gameVersions:$gv}
+               + (if ($rel | length) > 0 then {relations:{projects:$rel}} else {} end)' \
               > cf_meta.json
             HTTP=$(curl -sS -o cf_resp.json -w '%{http_code}' -X POST \
               "https://minecraft.curseforge.com/api/projects/${CF_ID}/upload-file" \
