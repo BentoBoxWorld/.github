@@ -1,3 +1,9 @@
+[![Servers](https://download.bentobox.world/badge/servers.svg)](https://download.bentobox.world)
+[![Downloads](https://download.bentobox.world/badge/downloads.svg)](https://download.bentobox.world)
+[![Islands](https://download.bentobox.world/badge/islands.svg)](https://download.bentobox.world)
+[![Players online](https://download.bentobox.world/badge/players.svg)](https://download.bentobox.world)
+[![New islands per day](https://download.bentobox.world/badge/islands-created.svg)](https://download.bentobox.world)
+
 [![Discord](https://img.shields.io/discord/272499714048524288.svg?logo=discord)](https://discord.bentobox.world)
 [![Build Status](https://ci.codemc.io/job/BentoBoxWorld/job/BentoBox/badge/icon)](https://ci.codemc.io/job/BentoBoxWorld/job/BentoBox/)
 [![Maintainability Rating](https://sonarcloud.io/api/project_badges/measure?project=BentoBoxWorld_BentoBox&metric=sqale_rating)](https://sonarcloud.io/dashboard?id=BentoBoxWorld_BentoBox)
